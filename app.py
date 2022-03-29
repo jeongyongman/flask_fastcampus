@@ -4,36 +4,29 @@ from flask import request
 from flask import redirect
 from flask import render_template
 from models import db
+from flask_wtf.csrf import CSRFProtect
+from forms import RegisterForm
 
-from models import Fcuser	#
+from models import Fcuser
 
 app = Flask(__name__)
 
 @app.route('/register', methods=['GET','POST'])
 def register():
-    if request.method == 'GET':
-        return render_template('register.html')
-    else:
-        userid = request.form.get('userid')	#
-        username = request.form.get('username')	#
-        password = request.form.get('password')	#
-        re_password = request.form.get('re-password')	#
+    form = RegisterForm()
+    if form.validate_on_submit():
+        fcuser = Fcuser()
+        fcuser.userid = form.data.get('userid')	#
+        fcuser.username = form.data.get('username')	#
+        fcuser.password = form.data.get('password')	#
 
-        if not (userid and username and password and re_password):	#
-            return render_template('register.html')	#
-
-        if password != re_password:	#
-            return render_template('register.html')	#
-
-        fcuser = Fcuser()	#
-        fcuser.userid = userid	#
-        fcuser.username = username	#
-        fcuser.password = password	#
-
-        db.session.add(fcuser)	#
-        db.session.commit()	#
+        db.session.add(fcuser)
+        db.session.commit()
+        print('Success!')	#
         
         return redirect('/')
+
+    return render_template('register.html', form=form)
 
 @app.route('/')
 def hello():
@@ -46,7 +39,10 @@ if __name__ == "__main__":
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + dbfile
     app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
     app.config['SQLALCHEMY_TRACK_MODIFICATION'] = False
+    app.config['SECRET_KEY'] = 'ddd'
 
+    csrf = CSRFProtect()
+    csrf.init_app(app)
     db.init_app(app)
     db.app = app
     db.create_all()
