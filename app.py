@@ -12,6 +12,11 @@ from models import Fcuser
 
 app = Flask(__name__)
 
+@app.route('/logout', methods=['GET'])
+def logout():
+    session.pop('userid', None)
+    return redirect('/')
+
 @app.route('/login', methods=['GET','POST'])
 def login():
     form = LoginForm()
